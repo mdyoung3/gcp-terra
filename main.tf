@@ -13,11 +13,6 @@ provider "google" {
   zone    = "us-central1-c"
 }
 
-resource "google_compute_network" "vpc_network" {
-  name                    = "terraform-network"
-  auto_create_subnetworks = "true"
-}
-
 resource "random_id" "default" {
   byte_length = 8
 }
@@ -39,25 +34,24 @@ resource "local_file" "default" {
   file_permission = "0644"
   filename        = "${path.module}/backend.tf"
 
-  # You can store the template in a file and use the templatefile function for
-  # more modularity, if you prefer, instead of storing the template inline as
-  # we do here.
-  content = <<-EOT
-  terraform {
-    backend "gcs" {
-      bucket = "${google_storage_bucket.default.name}"
-    }
-  }
-  EOT
+  content = templatefile("./templates/backend.tf.tpl", {
+    bucket_name = google_storage_bucket.default.name
+    prefix         = "terraform/state"
+    encryption_key = ""
+  })
 }
 
-resource "google_compute_instance" "vm_instance" {
+locals {
+  ssh_public_key = file(var.ssh_pub_key)
+}
+
+resource "google_compute_instance" "website" {
   name         = "vpc-instance"
   machine_type = "e2-micro"
 
   boot_disk {
     initialize_params {
-      image = "ubuntu-minimal-2210-kinetic-amd64-v20230126"
+      image = var.machine_image
     }
   }
 
@@ -66,4 +60,35 @@ resource "google_compute_instance" "vm_instance" {
     network = "default"
     access_config {}
   }
+
+  # Add SSH key to instance
+  metadata = {
+    ssh-keys = "your-username:${local.ssh_public_key}"
+  }
+
+  tags = ["ssh-enabled"]
+}
+
+
+# Firewall rule for SSH
+resource "google_compute_firewall" "ssh" {
+  name    = "allow-ssh"
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = [var.allowed_ssh_ips]  # Or restrict to your IP
+  target_tags   = ["ssh-enabled"]
+}
+
+# Output the IP
+output "instance_ip" {
+  value = google_compute_instance.web.network_interface[0].access_config[0].nat_ip
+}
+
+output "ssh_command" {
+  value = "ssh -i ~/.ssh/gcp_terraform_key your-username@${google_compute_instance.web.network_interface[0].access_config[0].nat_ip}"
 }
