@@ -35,14 +35,10 @@ resource "local_file" "default" {
   filename        = "${path.module}/backend.tf"
 
   content = templatefile("./templates/backend.tf.tpl", {
-    bucket_name = google_storage_bucket.default.name
+    bucket_name    = google_storage_bucket.default.name
     prefix         = "terraform/state"
     encryption_key = ""
   })
-}
-
-locals {
-  ssh_public_key = file(var.ssh_pub_key)
 }
 
 resource "google_compute_instance" "website" {
@@ -61,16 +57,9 @@ resource "google_compute_instance" "website" {
     access_config {}
   }
 
-  # Add SSH key to instance
-  metadata = {
-    ssh-keys = "your-username:${local.ssh_public_key}"
-  }
-
   tags = ["ssh-enabled"]
 }
 
-
-# Firewall rule for SSH
 resource "google_compute_firewall" "ssh" {
   name    = "allow-ssh"
   network = "default"
@@ -80,15 +69,6 @@ resource "google_compute_firewall" "ssh" {
     ports    = ["22"]
   }
 
-  source_ranges = [var.allowed_ssh_ips]  # Or restrict to your IP
+  source_ranges = ["0.0.0.0/0"]
   target_tags   = ["ssh-enabled"]
-}
-
-# Output the IP
-output "instance_ip" {
-  value = google_compute_instance.web.network_interface[0].access_config[0].nat_ip
-}
-
-output "ssh_command" {
-  value = "ssh -i ~/.ssh/gcp_terraform_key your-username@${google_compute_instance.web.network_interface[0].access_config[0].nat_ip}"
 }

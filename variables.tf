@@ -16,31 +16,11 @@ variable "gcp_region_2" {
 variable "environment" {
   type        = string
   description = "The environment for deploying (dev, test, prod)"
-  default = "dev"
-}
-
-variable "ssh_user" {
-  description = "SSH username"
-  type = string
-}
-
-variable "ssh_pub_key_path" {
-  description = "path to public ssh key file"
-  type = string
-}
-
-variable "allowed_ssh_ips" {
-  description = "IPs allowed to SSH"
-  type = list(string)
+  default     = "dev"
 }
 
 variable "machine_image" {
   description = "Machine image for project"
-  type = string
-  default = "ubuntu-os-cloud/ubuntu-2204-lts"
-}
-
-variable "ssh_pub_key" {
-  description = "SSH Public Key"
-  type = string
+  type        = string
+  default     = "ubuntu-os-cloud/ubuntu-2204-lts"
 }
