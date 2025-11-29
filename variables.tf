@@ -4,19 +4,22 @@ variable "project_name" {
 }
 
 variable "gcp_region_1" {
-  description = "Sets the desired region"
+  description = "Sets the desired region."
   type        = string
 }
 
 variable "gcp_region_2" {
-  description = "Sets the desired region"
+  description = "Sets the desired region."
+  type        = string
+}
+variable "gcp_zone_1" {
+  description = "Sets the desired zone."
   type        = string
 }
 
-variable "environment" {
+variable "gcp_zone_2" {
+  description = "Sets the desired zone."
   type        = string
-  description = "The environment for deploying (dev, test, prod)"
-  default     = "dev"
 }
 
 variable "machine_image" {

@@ -9,36 +9,25 @@ terraform {
 
 provider "google" {
   project = var.project_name
-  region  = "us-central1"
-  zone    = "us-central1-c"
+  region  = terraform.workspace == "default" ? var.gcp_region_1 : var.gcp_region_2
+  zone    = terraform.workspace == "default" ? var.gcp_zone_1 : var.gcp_zone_2
 }
 
-resource "random_id" "default" {
-  byte_length = 8
-}
+module "state_file_bucket" {
+  source = "./modules/gcs_backend"
 
-resource "google_storage_bucket" "default" {
-  name     = "${random_id.default.hex}-terraform-remote-backend"
-  location = "US"
+  backend_file_path = path.module
+  bucket_location   = "US"
+  state_prefix      = "jellobelt/state"
+  template_path     = "${path.module}/templates/backend.tf.tpl"
 
-  force_destroy               = false
-  public_access_prevention    = "enforced"
-  uniform_bucket_level_access = true
+  lifecycle_rules = [
+    {
+      action = "Delete"
+      age    = 365 # Delete old versions after 1 year
+    }
+  ]
 
-  versioning {
-    enabled = true
-  }
-}
-
-resource "local_file" "default" {
-  file_permission = "0644"
-  filename        = "${path.module}/backend.tf"
-
-  content = templatefile("./templates/backend.tf.tpl", {
-    bucket_name    = google_storage_bucket.default.name
-    prefix         = "terraform/state"
-    encryption_key = ""
-  })
 }
 
 resource "google_compute_instance" "website" {
