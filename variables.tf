@@ -27,3 +27,8 @@ variable "machine_image" {
   type        = string
   default     = "ubuntu-os-cloud/ubuntu-2204-lts"
 }
+
+variable "ssh_ip_ranges" {
+  description = "Shares a range of IPs for accessing the server via ssh."
+  type = list(string)
+}
