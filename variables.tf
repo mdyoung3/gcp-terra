@@ -32,3 +32,13 @@ variable "ssh_ip_ranges" {
   description = "Shares a range of IPs for accessing the server via ssh."
   type = list(string)
 }
+
+variable "environment" {
+  description = "Sets the environment name."
+  type = string
+
+  validation {
+    condition = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "Must be dev, staging or prod"
+  }
+}

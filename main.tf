@@ -42,7 +42,7 @@ resource "local_file" "backend_config" {
 }
 
 resource "google_compute_instance" "jb-website" {
-  name         = "jb-instance"
+  name         = "${var.environment}-jb-instance"
   machine_type = "e2-micro"
 
   boot_disk {
@@ -57,7 +57,7 @@ resource "google_compute_instance" "jb-website" {
     access_config {}
   }
 
-  # metadata_startup_script = templatefile("templates/startup_script.tpl", { environment = var.environment })
+  metadata_startup_script = templatefile("templates/startup_script.tpl", { environment = var.environment })
 
   tags = ["ssh-enabled"]
 }
